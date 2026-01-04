@@ -10,13 +10,18 @@ const MODELS = {
   FALLBACK2: 'gemini-2.0-flash'   // Good accuracy (1500 req/day per key)
 };
 
-export async function identifyAnimal(imageBuffer) {
+export async function identifyAnimal(imageBuffer, location = null) {
   const modelsToTry = [MODELS.PRIMARY, MODELS.FALLBACK, MODELS.FALLBACK2];
   
   // Convert buffer to base64
   const base64Image = imageBuffer.toString('base64');
   
-  const prompt = `You are an expert wildlife biologist. Analyze this image and identify the animal species.
+  // Build location context if provided
+  const locationContext = location 
+    ? `\nThe photo was taken in: ${location}. Consider species native to or commonly found in this region when making your identification.`
+    : '';
+  
+  const prompt = `You are an expert wildlife biologist. Analyze this image and identify the animal species.${locationContext}
 
 Respond with ONLY a JSON object in this exact format (no other text):
 {"commonName": "Peregrine Falcon", "scientificName": "Falco peregrinus"}

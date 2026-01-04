@@ -17,7 +17,7 @@ export const identifyController = {
 
     if (action === 'identify') {
       try {
-        const { imageBuffer, imageBase64 } = req.body;
+        const { imageBuffer, imageBase64, location } = req.body;
         
         if (!imageBuffer && !imageBase64) {
           return res.status(400).json({
@@ -31,7 +31,7 @@ export const identifyController = {
           ? Buffer.from(imageBase64, 'base64')
           : Buffer.from(imageBuffer);
 
-        const result = await identifyAnimal(buffer);
+        const result = await identifyAnimal(buffer, location);
 
         if (result.success) {
           return res.json({

@@ -1,11 +1,35 @@
-import { Telegraf } from 'telegraf';
+import { Telegraf, Markup } from 'telegraf';
 import { identifyAnimal } from './services/animalIdentifier.js';
 import { downloadFile } from './utils/fileHandler.js';
 
-// Store user's last uploaded photo
+// Store user's last uploaded photo and state
 const userPhotos = new Map();
+const userState = new Map(); // Track if we're waiting for location
 
 let bot;
+
+// Location keyboard with common regions
+const getLocationKeyboard = (autoIdentify = false) => {
+  const prefix = autoIdentify ? 'loc_auto_' : 'loc_';
+  return Markup.inlineKeyboard([
+    [
+      Markup.button.callback('🇸🇬 Singapore', `${prefix}Singapore`),
+      Markup.button.callback('🇲🇾 Malaysia', `${prefix}Malaysia`)
+    ],
+    [
+      Markup.button.callback('🇮🇩 Indonesia', `${prefix}Indonesia`),
+      Markup.button.callback('🇹🇭 Thailand', `${prefix}Thailand`)
+    ],
+    [
+      Markup.button.callback('🇵🇭 Philippines', `${prefix}Philippines`),
+      Markup.button.callback('🇻🇳 Vietnam', `${prefix}Vietnam`)
+    ],
+    [
+      Markup.button.callback('🌏 Other Location', `${prefix}other`),
+      Markup.button.callback('⏭️ Skip', `${prefix}skip`)
+    ]
+  ]);
+};
 
 export function startBot() {
   bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
@@ -22,7 +46,8 @@ export function startBot() {
       '🐾 Welcome to the Animal Identification Bot!\n\n' +
       '📸 How to use:\n' +
       '1. Send me a photo of an animal\n' +
-      '2. Type /identify to identify the species\n\n' +
+      '2. Select your location (or skip)\n' +
+      '3. Get the species information!\n\n' +
       'Commands:\n' +
       '/start - Show this message\n' +
       '/help - Get help\n' +
@@ -35,77 +60,92 @@ export function startBot() {
     ctx.reply(
       '🔍 How to use this bot:\n\n' +
       '1. Upload a photo of an animal\n' +
-      '2. Type /identify\n' +
+      '2. Select your location using the buttons\n' +
       '3. Wait for the AI to analyze\n' +
       '4. Get the species information!\n\n' +
       '💡 Tips:\n' +
       '- Use clear, well-lit photos\n' +
       '- Make sure the animal is visible\n' +
-      '- Close-up photos work best'
+      '- Close-up photos work best\n' +
+      '- Providing location helps identify regional species more accurately'
     );
   });
 
-  // Handle photo uploads - store for later identification OR identify immediately if caption is /identify
+  // Handle photo uploads - show location buttons
   bot.on('photo', async (ctx) => {
     const photo = ctx.message.photo[ctx.message.photo.length - 1];
     const caption = ctx.message.caption?.trim();
     
-    // If caption is /identify, identify immediately
+    // Store photo
+    userPhotos.set(ctx.from.id, photo.file_id);
+    
+    // If caption is /identify, show location buttons with auto-identify
     if (caption === '/identify') {
-      const processingMsg = await ctx.reply('🔍 Analyzing image with AI... Please wait.');
-      
-      try {
-        const fileLink = await ctx.telegram.getFileLink(photo.file_id);
-        const imageBuffer = await downloadFile(fileLink.href);
-        const result = await identifyAnimal(imageBuffer);
-        
-        await ctx.deleteMessage(processingMsg.message_id);
-        
-        if (result.success) {
-          await sendIdentificationResult(ctx, result);
-        } else {
-          await ctx.reply(
-            '❌ Sorry, I couldn\'t identify the animal.\n\n' +
-            'Error: ' + result.error + '\n\n' +
-            'Please try with a clearer photo.'
-          );
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        await ctx.reply('⚠️ An error occurred. Please try again.');
-      }
+      await ctx.reply(
+        '📍 Where was this photo taken? (optional)',
+        getLocationKeyboard(true)
+      );
     } else {
-      // Store photo for later identification
-      userPhotos.set(ctx.from.id, photo.file_id);
-      ctx.reply(
-        '✅ Photo received!\n\n' +
-        'Now type /identify to identify the animal species.\n' +
-        '💡 Tip: You can also upload a photo with caption /identify to identify instantly!'
+      // Show location buttons
+      await ctx.reply(
+        '✅ Photo received!\n\n📍 Where was this photo taken? (optional)',
+        getLocationKeyboard(false)
       );
     }
   });
 
-  // /identify command - identify the stored photo
-  bot.command('identify', async (ctx) => {
-    const photoFileId = userPhotos.get(ctx.from.id);
+  // Handle location button callbacks
+  bot.action(/^loc_(auto_)?(.+)$/, async (ctx) => {
+    const autoIdentify = ctx.match[1] === 'auto_';
+    const selection = ctx.match[2];
+    const userId = ctx.from.id;
     
-    if (!photoFileId) {
-      return ctx.reply('❌ No photo found! Please upload a photo first, then type /identify');
+    // Answer callback to remove loading state
+    await ctx.answerCbQuery();
+    
+    // Handle "other" - ask for custom location
+    if (selection === 'other') {
+      userState.set(userId, autoIdentify ? 'waiting_for_custom_location_auto' : 'waiting_for_custom_location');
+      await ctx.editMessageText('🌍 Please type your location:');
+      return;
     }
     
-    const processingMsg = await ctx.reply('🔍 Analyzing image with AI... Please wait.');
+    // Get location (null if skipped)
+    const location = selection === 'skip' ? null : selection;
+    
+    // Store location
+    userState.set(userId + '_location', location);
+    
+    if (autoIdentify) {
+      // Auto-identify immediately
+      await performIdentification(ctx, userId, location);
+    } else {
+      // Update message and wait for /identify
+      if (location) {
+        await ctx.editMessageText(`📍 Location set to: ${location}\n\nNow type /identify to identify the animal.`);
+      } else {
+        await ctx.editMessageText('👍 No problem!\n\nNow type /identify to identify the animal.');
+      }
+    }
+  });
+
+  // Shared identification function
+  async function performIdentification(ctx, userId, location) {
+    const photoFileId = userPhotos.get(userId);
+    
+    if (!photoFileId) {
+      return ctx.reply('❌ No photo found! Please upload a photo first.');
+    }
+    
+    const processingMsg = await ctx.reply(location 
+      ? `🔍 Analyzing image from ${location}... Please wait.`
+      : '🔍 Analyzing image... Please wait.');
     
     try {
-      // Get file link from Telegram
       const fileLink = await ctx.telegram.getFileLink(photoFileId);
-      
-      // Download the image
       const imageBuffer = await downloadFile(fileLink.href);
+      const result = await identifyAnimal(imageBuffer, location);
       
-      // Identify using Google Gemini
-      const result = await identifyAnimal(imageBuffer);
-      
-      // Delete processing message
       await ctx.deleteMessage(processingMsg.message_id);
       
       if (result.success) {
@@ -118,19 +158,56 @@ export function startBot() {
         );
       }
       
-      // Clear the stored photo after identification
-      userPhotos.delete(ctx.from.id);
+      // Clear stored data
+      userPhotos.delete(userId);
+      userState.delete(userId);
+      userState.delete(userId + '_location');
       
     } catch (error) {
       console.error('Error:', error);
       await ctx.reply('⚠️ An error occurred. Please try again.');
     }
+  }
+
+  // /identify command - identify the stored photo with stored location
+  bot.command('identify', async (ctx) => {
+    const photoFileId = userPhotos.get(ctx.from.id);
+    
+    if (!photoFileId) {
+      return ctx.reply('❌ No photo found! Please upload a photo first.');
+    }
+    
+    // Get stored location (may be null)
+    const location = userState.get(ctx.from.id + '_location') || null;
+    
+    await performIdentification(ctx, ctx.from.id, location);
   });
 
-  // Handle non-photo messages
-  bot.on('message', (ctx) => {
-    if (!ctx.message.photo && !ctx.message.text?.startsWith('/')) {
-      ctx.reply('📸 Please send me a photo of an animal, then type /identify');
+  // Handle text messages - check if we're waiting for custom location
+  bot.on('text', async (ctx) => {
+    const text = ctx.message.text;
+    
+    // Skip if it's a command
+    if (text.startsWith('/')) {
+      return;
+    }
+    
+    const state = userState.get(ctx.from.id);
+    
+    if (state === 'waiting_for_custom_location' || state === 'waiting_for_custom_location_auto') {
+      const location = text.trim();
+      
+      // Store location
+      userState.set(ctx.from.id + '_location', location);
+      userState.delete(ctx.from.id);
+      
+      if (state === 'waiting_for_custom_location_auto') {
+        await performIdentification(ctx, ctx.from.id, location);
+      } else {
+        await ctx.reply(`📍 Location set to: ${location}\n\nNow type /identify to identify the animal.`);
+      }
+    } else {
+      ctx.reply('📸 Please send me a photo of an animal first.');
     }
   });
 
