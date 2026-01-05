@@ -6,7 +6,8 @@ import { downloadFile } from './utils/fileHandler.js';
 const userPhotos = new Map();
 const userState = new Map(); // Track if we're waiting for location
 
-let bot;
+// Initialize bot at module level so it's available for webhook
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 // Location keyboard with common regions
 const getLocationKeyboard = (autoIdentify = false) => {
@@ -32,8 +33,6 @@ const getLocationKeyboard = (autoIdentify = false) => {
 };
 
 export function startBot() {
-  bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-
   // Global error handler - catches errors like "bot was blocked by user"
   bot.catch((err, ctx) => {
     console.error(`Error for ${ctx.updateType}:`, err.message);
