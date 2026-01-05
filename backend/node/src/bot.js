@@ -238,10 +238,29 @@ async function sendIdentificationResult(ctx, result) {
 }
 
 // ============================================
+// Set up bot commands menu (the dropdown list when user types /)
+// ============================================
+async function setupBotCommands() {
+  try {
+    await bot.telegram.setMyCommands([
+      { command: 'start', description: 'Start the bot and see welcome message' },
+      { command: 'help', description: 'Show available commands and tips' },
+      { command: 'identify', description: 'Identify the last uploaded animal photo' }
+    ]);
+    console.log('✅ Bot commands menu set up successfully');
+  } catch (error) {
+    console.error('Failed to set bot commands:', error.message);
+  }
+}
+
+// ============================================
 // startBot - only handles launching (polling vs webhook)
 // ============================================
 export function startBot() {
   const WEBHOOK_URL = process.env.WEBHOOK_URL;
+  
+  // Set up the commands menu
+  setupBotCommands();
   
   if (WEBHOOK_URL) {
     // Production (Azure): Use webhook - supports multiple users and scales well
