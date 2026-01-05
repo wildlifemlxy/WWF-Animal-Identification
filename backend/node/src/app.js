@@ -15,15 +15,18 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'WWF Animal Identifier Bot is running!' });
 });
 
-// Webhook endpoint for Telegram (production)
+// Webhook endpoint for Telegram (production/Azure)
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 if (WEBHOOK_URL) {
   const secretPath = `/webhook/${process.env.TELEGRAM_BOT_TOKEN}`;
   app.use(bot.webhookCallback(secretPath));
   
-  // Set webhook on startup
-  bot.telegram.setWebhook(`${WEBHOOK_URL}${secretPath}`).then(() => {
+  // Delete any existing webhook first, then set new one
+  bot.telegram.deleteWebhook({ drop_pending_updates: true }).then(() => {
+    return bot.telegram.setWebhook(`${WEBHOOK_URL}${secretPath}`);
+  }).then(() => {
     console.log(`✅ Webhook set to: ${WEBHOOK_URL}${secretPath}`);
+    console.log('🌐 Bot ready for multiple users via webhook');
   }).catch(err => {
     console.error('Failed to set webhook:', err);
   });

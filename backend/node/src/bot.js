@@ -238,12 +238,23 @@ export function startBot() {
   const WEBHOOK_URL = process.env.WEBHOOK_URL;
   
   if (WEBHOOK_URL) {
-    // Production: Use webhook
-    console.log('🌐 Starting bot with webhook...');
+    // Production (Azure): Use webhook - supports multiple users and scales well
+    // Webhook is set up in app.js, just log status here
+    console.log('🌐 Bot running in webhook mode (Azure/Production)');
+    console.log('✅ Multiple users supported via webhook');
   } else {
-    // Development: Use polling
-    bot.launch().then(() => {
+    // Development: Use polling with dropPendingUpdates to avoid conflicts
+    // Note: Polling still supports multiple users, just not multiple bot instances
+    bot.launch({ dropPendingUpdates: true }).then(() => {
       console.log('🤖 Animal Identification Bot is running (polling mode)!');
+      console.log('✅ Multiple users supported - single instance');
+    }).catch((err) => {
+      if (err.response?.error_code === 409) {
+        console.error('❌ Bot conflict detected! Another instance is running.');
+        console.error('   Stop the other instance or wait a few seconds and try again.');
+        process.exit(1);
+      }
+      throw err;
     });
   }
 
