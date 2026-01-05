@@ -9,6 +9,45 @@ const userState = new Map(); // Track if we're waiting for location
 // Initialize bot at module level so it's available for webhook
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
+// Store bot username for group command filtering
+let botUsername = null;
+
+// ============================================
+// Middleware to ignore commands meant for other bots in groups
+// In groups, /command@other_bot should be ignored by this bot
+// ============================================
+bot.use(async (ctx, next) => {
+  // Only process text messages with commands
+  if (ctx.message?.text?.startsWith('/')) {
+    const text = ctx.message.text;
+    
+    // Check if command is directed at a specific bot (contains @)
+    if (text.includes('@')) {
+      // Get bot username if we don't have it yet
+      if (!botUsername) {
+        try {
+          const me = await ctx.telegram.getMe();
+          botUsername = me.username.toLowerCase();
+        } catch (e) {
+          console.error('Failed to get bot username:', e.message);
+        }
+      }
+      
+      // Extract the @username from the command
+      const match = text.match(/^\/\w+@(\w+)/);
+      if (match) {
+        const targetBot = match[1].toLowerCase();
+        // If command is for a different bot, ignore it
+        if (targetBot !== botUsername) {
+          return; // Don't process this command
+        }
+      }
+    }
+  }
+  
+  return next();
+});
+
 // Location keyboard with common regions
 const getLocationKeyboard = (autoIdentify = false) => {
   const prefix = autoIdentify ? 'loc_auto_' : 'loc_';
