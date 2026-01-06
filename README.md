@@ -1,17 +1,24 @@
-# 🐾 WWF Animal Identification Bot
+# � WWF Wildlife Identification Bot
 
-A Telegram bot that uses Google Gemini AI to identify animal species from photos.
+A Telegram bot powered by Google Gemini AI to help identify wildlife species from photos. Built to support WWF's mission in wildlife conservation and education.
 
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green)
 ![Telegram](https://img.shields.io/badge/Telegram-Bot-blue)
 ![Google Gemini](https://img.shields.io/badge/Google-Gemini%20AI-orange)
+![WWF](https://img.shields.io/badge/WWF-Wildlife-brightgreen)
+
+## 🌍 About
+
+This bot was created to support wildlife conservation efforts by helping users identify animal species they encounter. Whether you're a nature enthusiast, researcher, or just curious about wildlife, this bot makes species identification quick and easy.
 
 ## ✨ Features
 
-- 📸 Upload animal photos to identify species
-- 🤖 AI-powered identification using Google Gemini
+- 📸 Identify wildlife from photos using AI
+- 🤖 Powered by Google Gemini AI for accurate identification
 - 🔍 Get scientific names and common names
-- 📱 Easy-to-use Telegram interface
+- 📍 Location-aware identification for regional species
+- 💬 Works in Telegram groups and private chats
+- 📬 Results sent via PM to keep group chats clean
 
 ## 🚀 Getting Started
 
@@ -62,20 +69,20 @@ A Telegram bot that uses Google Gemini AI to identify animal species from photos
 
 ## 📖 Usage
 
-1. Open Telegram and find your bot
-2. Send `/start` to begin
-3. Upload a photo of an animal
-4. Send `/identify` to identify the species
-
-**💡 Tip:** You can also send a photo with the caption `/identify` for instant identification!
+1. Open Telegram and find the bot: `@wwf_animal_id_bot`
+2. Send `/start` to see welcome message
+3. Send `/identify` to start identification
+4. Upload a photo of the wildlife
+5. Enter location (or type "skip")
+6. Receive species information via PM!
 
 ## 🤖 Bot Commands
 
 | Command | Description |
 |---------|-------------|
 | `/start` | Start the bot and see welcome message |
-| `/help` | Get usage instructions |
-| `/identify` | Identify the last uploaded animal photo |
+| `/help` | Get usage instructions and tips |
+| `/identify` | Start wildlife identification |
 
 ## 🛠️ Tech Stack
 
@@ -122,6 +129,10 @@ This project is licensed under the MIT License.
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## 🌿 Support WWF
+
+Learn more about WWF's wildlife conservation efforts at [wwf.org](https://www.worldwildlife.org/)
+
 ---
 
-Made with ❤️ for wildlife conservation
+Made with ❤️ for wildlife conservation 🐼
