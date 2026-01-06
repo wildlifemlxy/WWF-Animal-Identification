@@ -129,7 +129,7 @@ bot.start((ctx) => {
       '1. Type /identify@wwf_animal_id_bot\n' +
       '2. Reply to my message with a photo\n' +
       '3. Enter your location (or type "skip")\n' +
-      '4. Get the species information via PM!\n\n' +
+      '4. Get the species information!\n\n' +
       'Commands:\n' +
       '/start - Show this message\n' +
       '/help - Get help\n' +
@@ -161,7 +161,7 @@ bot.help((ctx) => {
       '1. Type /identify@wwf_animal_id_bot\n' +
       '2. Reply to my message with a photo\n' +
       '3. Enter your location (or type "skip")\n' +
-      '4. Get the species information via PM!\n\n' +
+      '4. Get the species information!\n\n' +
       '💡 Tips:\n' +
       '- Use clear, well-lit photos\n' +
       '- Make sure the animal is visible\n' +
@@ -266,17 +266,13 @@ async function performIdentification(ctx, userId, location) {
     await ctx.deleteMessage(processingMsg.message_id);
     
     if (result.success) {
-      await sendIdentificationResult(ctx, result, inGroup);
+      await sendIdentificationResult(ctx, result, false);
     } else {
       const errorMsg = '❌ Sorry, I couldn\'t identify the animal.\n\n' +
         'Error: ' + result.error + '\n\n' +
         'Please try with a clearer photo.';
       
-      if (inGroup) {
-        await sendPM(ctx, errorMsg);
-      } else {
-        await ctx.reply(errorMsg);
-      }
+      await ctx.reply(errorMsg);
     }
     
     // Clear stored data
