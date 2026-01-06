@@ -33,11 +33,17 @@ Identify wildlife species from photos using AI.
 | `/help` | Get usage instructions and tips |
 | `/identify` | Start wildlife identification |
 
-**Usage:**
+**Usage (in Groups):**
+1. Type `/identify@wwf_animal_id_bot` to start
+2. Reply to the bot's message with a photo of the wildlife
+3. Enter location (or type "skip")
+4. Receive species information via PM!
+
+**Usage (in Private Chat):**
 1. Type `/identify` to start
 2. Upload a photo of the wildlife
 3. Enter location (or type "skip")
-4. Receive species information via PM!
+4. Receive species information!
 
 ## 📝 License
 
