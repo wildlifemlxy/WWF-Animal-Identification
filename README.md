@@ -43,14 +43,6 @@ Identify wildlife species from photos using AI.
 
 This project is licensed under the MIT License.
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 🌿 Support WWF
-
-Learn more about WWF's wildlife conservation efforts at [wwf.org](https://www.worldwildlife.org/)
-
 ---
 
 Made with ❤️ for wildlife conservation 🐼
