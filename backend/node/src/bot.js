@@ -120,34 +120,68 @@ async function sendPM(ctx, message, options = {}) {
 
 // /start command
 bot.start((ctx) => {
-  ctx.reply(
-    '🐾 Welcome to the Animal Identification Bot!\n\n' +
-    '📸 How to use:\n' +
-    '1. Type /identify to start\n' +
-    '2. Upload a photo of an animal\n' +
-    '3. Enter your location (or skip)\n' +
-    '4. Get the species information via PM!\n\n' +
-    'Commands:\n' +
-    '/start - Show this message\n' +
-    '/help - Get help\n' +
-    '/identify - Start animal identification'
-  );
+  const inGroup = isGroupChat(ctx);
+  
+  if (inGroup) {
+    ctx.reply(
+      '🐾 Welcome to the WWF Animal Identification Bot!\n\n' +
+      '📸 How to use (in groups):\n' +
+      '1. Type /identify@wwf_animal_id_bot\n' +
+      '2. Reply to my message with a photo\n' +
+      '3. Enter your location (or type "skip")\n' +
+      '4. Get the species information via PM!\n\n' +
+      'Commands:\n' +
+      '/start - Show this message\n' +
+      '/help - Get help\n' +
+      '/identify - Start animal identification'
+    );
+  } else {
+    ctx.reply(
+      '🐾 Welcome to the WWF Animal Identification Bot!\n\n' +
+      '📸 How to use:\n' +
+      '1. Type /identify to start\n' +
+      '2. Upload a photo of an animal\n' +
+      '3. Enter your location (or type "skip")\n' +
+      '4. Get the species information!\n\n' +
+      'Commands:\n' +
+      '/start - Show this message\n' +
+      '/help - Get help\n' +
+      '/identify - Start animal identification'
+    );
+  }
 });
 
 // /help command
 bot.help((ctx) => {
-  ctx.reply(
-    '🔍 How to use this bot:\n\n' +
-    '1. Type /identify to start\n' +
-    '2. Upload a photo of an animal\n' +
-    '3. Enter your location (or type "skip")\n' +
-    '4. Get the species information via PM!\n\n' +
-    '💡 Tips:\n' +
-    '- Use clear, well-lit photos\n' +
-    '- Make sure the animal is visible\n' +
-    '- Close-up photos work best\n' +
-    '- Providing location helps identify regional species more accurately'
-  );
+  const inGroup = isGroupChat(ctx);
+  
+  if (inGroup) {
+    ctx.reply(
+      '🔍 How to use this bot (in groups):\n\n' +
+      '1. Type /identify@wwf_animal_id_bot\n' +
+      '2. Reply to my message with a photo\n' +
+      '3. Enter your location (or type "skip")\n' +
+      '4. Get the species information via PM!\n\n' +
+      '💡 Tips:\n' +
+      '- Use clear, well-lit photos\n' +
+      '- Make sure the animal is visible\n' +
+      '- Close-up photos work best\n' +
+      '- Providing location helps identify regional species'
+    );
+  } else {
+    ctx.reply(
+      '🔍 How to use this bot:\n\n' +
+      '1. Type /identify to start\n' +
+      '2. Upload a photo of an animal\n' +
+      '3. Enter your location (or type "skip")\n' +
+      '4. Get the species information!\n\n' +
+      '💡 Tips:\n' +
+      '- Use clear, well-lit photos\n' +
+      '- Make sure the animal is visible\n' +
+      '- Close-up photos work best\n' +
+      '- Providing location helps identify regional species'
+    );
+  }
 });
 
 // Handle photo uploads - ask for location as text input
